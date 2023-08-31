@@ -1,0 +1,14 @@
+##' TFactSR: A package for identifying critical transcription factors.
+##'
+##' TFactS is to predict which are the transcription factors (TFs), regulated
+##' in a biological condition based on lists of differentially expressed genes
+##' (DEGs) obtained from transcriptome experiments. This package is based on
+##' the TFactS concept and expands it. It allows users to performe
+##' TFactS-like enrichment approach. The package can import and use the
+##' original catalogue file from the TFactS website (http://www.tfacts.org/)
+##' as well as users' defined catalogues of interest that are not supported
+##' by TFactS (e.g., Arabidopsis).
+##'
+##' @docType package
+##' @name TFactSR
+NULL

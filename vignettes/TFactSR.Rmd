@@ -1,0 +1,132 @@
+---
+title: "TFactSR: Enrichment Approach to Predict Which Transcription Factors Are Regulated"
+author:
+- name: Atsushi Fukushima
+  affiliation: Kyoto Prefectural University
+  email: afukushima@gmail.com
+date: "`r Sys.Date()`"
+output:
+  BiocStyle::html_document:
+    toc_float: true
+package: TFactSR
+vignette: |
+  %\VignetteIndexEntry{TFactSR}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+# Introduction
+  [TFactS](http://www.tfacts.org/) is to predict which are the transcription factors (TFs), regulated in a biological condition based on lists of differentially expressed genes (DEGs) obtained from transcriptome experiments. This package is based on the TFactS concept and expands it. It allows users to performe TFactS-like enrichment approach. The package can import and use the original catalogue file from the [TFactS website](http://www.tfacts.org/) as well as users' defined catalogues of interest that are not supported by TFactS (e.g., Arabidopsis).
+
+# Methods - Statistical significance
+  This vignette is largely based on the [TFactS manual](http://www.tfacts.org/TFactS-new/TFactS-v2/index1.html). For the details about TFactS, please also see [the original paper by Essaghir et al. (2010)](https://academic.oup.com/nar/article-lookup/doi/10.1093/nar/gkq149).
+  
+
+## P-value
+  Briefly, the current package assumes the Sign-Less catalogue, i.e. it does not contain any regulation type information (up- or down-regulation). TFactSR compares the list of query DEGs (up and/or down) with a catalogue of target gene signatures. The core algorithm is based on Fisher's exact test using a contingency table as follows:
+
+
+TF                 | DEGs: Present   | DEGs: Absent    | Total
+------------------ | --------------- | --------------- | -----
+Catalogue: Present | *k*             | *m - k*         | *m*
+Catalogue: Absent  | *n - k*         | *N + k - n - m* | *N - m*
+Total              | *n*             | *N - n*         | *N*
+
+
+- $m$ is the number of target genes annotated for the TF under consideration
+- $n$ is the number of query genes
+- $N$ is the number of regulations in the catalog
+- $k$ is the number of query genes that are annotated as regulated by TF (i.e., the intersection between the query and the TF signature)
+
+
+$$ Pval = \left(
+            \begin{array}{c}
+              m \\
+              i
+            \end{array}
+          \right)
+          \left(
+            \begin{array}{c}
+              N-m \\
+              n-i
+            \end{array}
+          \right)
+/
+          \left(
+          \begin{array}{c}
+              N \\
+              n
+          \end{array}
+          \right)
+$$        
+
+
+## E-value
+E-value is the number of tests done ($T$) times the p-value.
+
+$Eval = pval \times T$
+
+
+## BH-corrected P-value
+Benjamini and Hochberg false discovery rate (FDR) controlling method: this is based on Benjamini and Hochberg (1995) and is calculated using p.adjust() function. Note that the current TFactSR package does not use Q-value (Storey 2003) under default settings.
+
+
+## Random Control (RC)
+RC is the percentage of which a TF is called significant under a certain E-value threshold after a random simulation of user lists in specified number of repetitions:
+
+$$ RD_{(TF)} = \frac{\#\left\{ Eval(TF) \leq \lambda \right\} \times 100} { \#\left\{rep\right\} } $$
+
+
+
+
+# Prerequisites
+The TFactSR package requires (1) a list of DEGs and (2) a catalogue of interest. For Arabidopsis, we prepared the catalogue based on [AtRegNet](https://agris-knowledgebase.org/) and [ATRM](http://atrm.cbi.pku.edu.cn/). For human data, the package can do the calculation using default settings. 
+
+The Supported organisms by the original TFactS are human, rat and mouse genes. As you can see below,  you can perform an enrichment analysis which TFs are regulated if you have a list of DEGs and your catalogue. 
+
+# Getting started
+For human/rat/mouse data, we can do the TFactS analysis as follows.
+
+```{R the original TFactS}
+library(TFactSR)
+data(DEGs)
+data(catalog)
+
+tftg <- extractTFTG(DEGs, catalog)
+TFs <- tftg$TFs
+all.targets <- tftg$all.targets
+
+res <- calculateTFactS(DEGs, catalog, TFs, all.targets)
+head(res)
+```
+
+Using the option "TF.col" and "TF.col", we can specify the target column of your catalogue dataset. Carefully you have to choose the TF-target relationships as follows.
+
+```{R Arabidopsis}
+data(AtCatalog)
+data(GenesUp_SH1H)
+
+d <- extractTFTG(GenesUp_SH1H, AtCatalog,
+                     TF.col = "TF",
+                     TG.col = "target.genes")
+
+res <- calculateTFactS(GenesUp_SH1H, AtCatalog, d$TFs, d$all.targets, TF.col = "TF")
+head(res)
+```
+
+# Acknowledgments {.unnumbered}
+We thank the Bio"Pack"thon community for helpful discussions. This work was supported by JSPS KAKENHI Grant Numbers 26850024 and 
+17K07663.
+
+# Reference {.unnumbered}
+1. Essaghir A, Toffalini F, Knoops L, Kallin A, van Helden J, Demoulin JB: Transcription factor regulation can be accurately predicted from the presence of target gene signatures in microarray gene expression data. [Nucleic Acids Res. 2010 Jun 1;38(11):e120](https://academic.oup.com/nar/article-lookup/doi/10.1093/nar/gkq149).
+2. Essaghir A, Demoulin JB: A Minimal Connected Network of Transcription Factors Regulated in Human Tumors and Its Application to the Quest for Universal Cancer Biomarkers. [Plos One 7 (6), 2012, e39666](https://journals.plos.org:443/plosone/article?id=10.1371/journal.pone.0039666).
+
+
+# Session info {.unnumbered}
+
+Here is the output of `sessionInfo()` on the system on which this
+document was compiled:
+
+```{r sessionInfo, echo=FALSE}
+sessionInfo()
+```

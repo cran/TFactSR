@@ -1,0 +1,26 @@
+context("Test for Datasets")
+
+test_that("Datasets", {
+  data(DEGs)
+  data(DEGs39)
+  data(catalog)
+  data(example.df)
+  data(example.list)
+  data(AtCatalog)
+  data(GenesUp_SH1H)
+
+  expect_identical(class(DEGs), "character")
+  expect_identical(class(DEGs39), "character")
+  expect_identical(class(catalog), "data.frame")
+  expect_identical(class(example.df), "data.frame")
+  expect_identical(class(example.list), "list")
+  expect_identical(class(AtCatalog), "data.frame")
+  expect_identical(class(GenesUp_SH1H), "character")
+
+  expect_equal(dim(catalog)[1], 6838)
+  expect_equal(dim(AtCatalog)[1], 18910)
+  expect_identical(colnames(AtCatalog)[2], "target.genes")
+  expect_equal(length(GenesUp_SH1H), 74)
+  expect_equal(length(DEGs), 18)
+  expect_equal(length(DEGs39), 39)
+})
